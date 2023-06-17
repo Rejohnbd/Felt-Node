@@ -1,0 +1,5 @@
+[2022-01-27T16:08:32.249] [ERROR] error - Error in Save Fence Alert No document found for query "{ _id: 61f24009611217205ab9a342 }"
+[2022-01-27T18:31:02.799] [ERROR] error - Request to Other Server  undefined
+[2022-01-27T18:59:19.328] [ERROR] error - Socket Error read ECONNRESET
+[2022-01-27T19:06:55.382] [ERROR] error - Request to Other Server  undefined
+[2022-01-27T20:07:43.287] [ERROR] error - Socket Error read ETIMEDOUT
