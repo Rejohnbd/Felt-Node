@@ -11,6 +11,7 @@ const errorLogger = myLogger.getLogger("error");
 util.inherits(Server, EventEmitter);
 
 function Server(opts, callback) {
+console.log('here');
   if (!(this instanceof Server)) {
     return new Server(opts, callback);
   }

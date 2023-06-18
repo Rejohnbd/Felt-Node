@@ -51,10 +51,11 @@ mongoose
   });
 */
 var server = gps.server(options, function (device, connection) {
+console.log('runnding');
   var dev_stat = 0;
 
   device.on("login_request", function (device_id, msg_parts) {
-    //console.log("Called Login")
+    console.log("Called Login")
 
     // deviceRef.child(device_id).once("value", function (snapshot) {
     //   var status = snapshot.child("Data").child("status").val();
@@ -76,7 +77,7 @@ var server = gps.server(options, function (device, connection) {
 
   //PING -> When the gps sends their position
   device.on("ping", function (str) {
-    // console.log("Called Ping")
+    console.log("Called Ping")
 
     console.log(device.uid, "str");
 
