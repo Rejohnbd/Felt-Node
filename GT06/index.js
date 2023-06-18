@@ -29,7 +29,7 @@ var deviceRef = admin.database().ref().child("Devices");
 */
 var headers = {
   "Content-Type": "application/json",
-  "api-token": config.API_TOKEN,
+  // "api-token": config.API_TOKEN,
 };
 
 var options = {
@@ -51,11 +51,11 @@ mongoose
   });
 */
 var server = gps.server(options, function (device, connection) {
-console.log('runnding');
+  console.log("runnding");
   var dev_stat = 0;
 
   device.on("login_request", function (device_id, msg_parts) {
-    console.log("Called Login")
+    console.log("Called Login");
 
     // deviceRef.child(device_id).once("value", function (snapshot) {
     //   var status = snapshot.child("Data").child("status").val();
@@ -77,7 +77,7 @@ console.log('runnding');
 
   //PING -> When the gps sends their position
   device.on("ping", function (str) {
-    console.log("Called Ping")
+    console.log("Called Ping");
 
     console.log(device.uid, "str");
 

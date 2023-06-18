@@ -1,5 +1,5 @@
 const config = {
-  // URL: "http://vtsapi.cpsdbd.com/gps/addData", // Sumon Vai
+  URL: "http://vtsapi.greenrevolutionbd.com/api/request-data",
   // API_TOKEN: "23jsdgjhsdgjdf8989234jkdfml8838", // Header SUMON
   // MONGO_URL: "mongodb://localhost:27017/mobitrackdb",
   PORT: 9991,
