@@ -2,41 +2,41 @@ var gps = require("./lib/server");
 var util = require("./lib/functions");
 require("dotenv").config();
 var requestify = require("requestify");
-//var admin = require("firebase-admin");
 var moment = require("moment");
+// Configuration File
+var config = require("./config");
+var options = {
+  debug: false,
+  port: config.PORT,
+  device_adapter: "GT06",
+};
+// Firebase
+var admin = require("firebase-admin");
+var serviceAccount = require("./firebase/serviceAccount.json");
 
-//var serviceAccount = require("./firebase/serviceAccount.json");
-
+// Device API Model
 var Location = require("./api/models/location");
 var Fence = require("./api/models/fence");
 var FenceAlert = require("./api/models/fencealert");
 
 //var mongoose = require("mongoose");
 
-var config = require("./config");
-
-// var url_2 = "http://napi.mobitrackbd.com/gps/addData";
-
 const myLogger = require("./utils/logger");
 const errorLogger = myLogger.getLogger("error");
-/*
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: config.FIRE_URL,
 });
 
 var deviceRef = admin.database().ref().child("Devices");
-*/
+
+// Server Data Header Prepare
 var headers = {
   "Content-Type": "application/json",
   // "api-token": config.API_TOKEN,
 };
 
-var options = {
-  debug: false,
-  port: config.PORT,
-  device_adapter: "GT06",
-};
 /*
 mongoose
   .connect(config.MONGO_URL, {
@@ -57,16 +57,16 @@ var server = gps.server(options, function (device, connection) {
   device.on("login_request", function (device_id, msg_parts) {
     console.log("Called Login");
 
-    // deviceRef.child(device_id).once("value", function (snapshot) {
-    //   var status = snapshot.child("Data").child("status").val();
+    deviceRef.child(device_id).once("value", function (snapshot) {
+      var status = snapshot.child("Data").child("status").val();
 
-    //   if (status) {
-    //     dev_stat = status;
-    //   } else {
-    //     //console.log("First Login")
-    //     deviceRef.child(device_id).child("id").set(device_id);
-    //   }
-    // });
+      if (status) {
+        dev_stat = status;
+      } else {
+        console.log("First Login");
+        deviceRef.child(device_id).child("id").set(device_id);
+      }
+    });
 
     // Some devices sends a login request before transmitting their position
     // Do some stuff before authenticate the device...
@@ -92,9 +92,9 @@ var server = gps.server(options, function (device, connection) {
 
     var rawData = {
       status: dev_stat.toString(),
-      lat: lat_raw,
-      lng: lng_raw,
-      speed: speed_raw,
+      lat: dex_to_degrees(lat_raw),
+      lng: dex_to_degrees(lng_raw),
+      speed: dex_to_degrees(speed_raw) * 1800000,
     };
 
     fire_data = {
@@ -110,9 +110,9 @@ var server = gps.server(options, function (device, connection) {
 
     if (util.in_bd(fire_data)) {
       //console.log("Call in Bangladesh")
-      // sendToFireBase(rawData);
+      sendToFireBase(rawData);
       sendToServer(fire_data);
-      getFenceAndPushNotification(fire_data);
+      // getFenceAndPushNotification(fire_data);
     }
     //return str;
   });
@@ -130,7 +130,6 @@ var server = gps.server(options, function (device, connection) {
 
   device.on("status", function (status, msg_data) {
     //console.log("Status",status)
-
     var st = hex2bin(status).substr(6, 1);
     dev_stat = st;
   });
@@ -172,11 +171,11 @@ var server = gps.server(options, function (device, connection) {
 
     return date;
   }
-  /*
+  // Send Data to Firebase
   function sendToFireBase(rawData) {
     deviceRef.child(device.uid).child("Data").update(rawData);
   }
-  */
+  // Send Data to Server
   function sendToServer(fireData) {
     console.log(fireData, "for post");
     const location = new Location(fireData);
@@ -190,43 +189,40 @@ var server = gps.server(options, function (device, connection) {
         body: fireData,
         headers: headers,
       })
+      .then(function (response) {
+        // console.log("Reply", response.getBody());
+        console.log("Location Saved To Database");
+      })
       .catch((err) => {
         errorLogger.error("Request to Other Server ", err.message);
       });
-    // .then(function(response){
-    //    console.log("Reply",response.getBody());
-    //    //console.log("Location Saved To Database");
-    // })
-    // .catch(function(err){
-    //     console.log(err);
-    // })
   }
 
-  function getFenceAndPushNotification(fireData) {
-    var imei = fireData.imei;
+  // function getFenceAndPushNotification(fireData) {
+  //   var imei = fireData.imei;
 
-    Fence.findOne({ imei: imei })
-      .then((fence) => {
-        if (fence) {
-          var lat = fence.lat;
-          var lng = fence.lng;
-          if (
-            getDistanceFromLatLonInMeter(lat, lng, fireData.lat, fireData.lng) >
-            43
-          ) {
-            fence["new_lat"] = fireData.lat;
-            fence["new_lng"] = fireData.lng;
-            sendNotification(fence);
-          }
-        } else {
-          // console.log("Fence Not Set Yet")
-        }
-      })
-      .catch((err) => {
-        errorLogger.error("In Find Fence", err.message);
-        console.log(err);
-      });
-  }
+  //   Fence.findOne({ imei: imei })
+  //     .then((fence) => {
+  //       if (fence) {
+  //         var lat = fence.lat;
+  //         var lng = fence.lng;
+  //         if (
+  //           getDistanceFromLatLonInMeter(lat, lng, fireData.lat, fireData.lng) >
+  //           43
+  //         ) {
+  //           fence["new_lat"] = fireData.lat;
+  //           fence["new_lng"] = fireData.lng;
+  //           sendNotification(fence);
+  //         }
+  //       } else {
+  //         // console.log("Fence Not Set Yet")
+  //       }
+  //     })
+  //     .catch((err) => {
+  //       errorLogger.error("In Find Fence", err.message);
+  //       console.log(err);
+  //     });
+  // }
 });
 
 // Convert Hexavalue to Human Readable Format
@@ -267,60 +263,60 @@ function deg2rad(deg) {
 }
 
 //Send Notification to Server
-function sendNotification(fence) {
-  var token = fence.user_token;
-  var payload = {
-    notification: {
-      title: "Fencing Alart",
-      body: fence.driver_name + " Has Been Changed its Location",
-      sound: "alarm",
-    },
-    data: {
-      alert_type: "Fencing",
-      device_id: String(fence.imei),
-    },
-  };
+// function sendNotification(fence) {
+//   var token = fence.user_token;
+//   var payload = {
+//     notification: {
+//       title: "Fencing Alart",
+//       body: fence.driver_name + " Has Been Changed its Location",
+//       sound: "alarm",
+//     },
+//     data: {
+//       alert_type: "Fencing",
+//       device_id: String(fence.imei),
+//     },
+//   };
 
-  admin
-    .messaging()
-    .sendToDevice(token, payload)
-    .then(function (response) {
-      // Delete the fence
-      deletefence(fence.imei);
-      saveFenceToDatabase(fence);
-    })
-    .catch(function (err) {
-      errorLogger.error("Error in send Notification", err.message);
-      // Delete The Fence
-      deletefence(fence.imei);
-    });
-}
+//   admin
+//     .messaging()
+//     .sendToDevice(token, payload)
+//     .then(function (response) {
+//       // Delete the fence
+//       deletefence(fence.imei);
+//       saveFenceToDatabase(fence);
+//     })
+//     .catch(function (err) {
+//       errorLogger.error("Error in send Notification", err.message);
+//       // Delete The Fence
+//       deletefence(fence.imei);
+//     });
+// }
 
 //Delete Fence After Sending Notification to Server
-function deletefence(imei) {
-  Fence.findOne({ imei: imei }).then((newfence) => {
-    if (newfence != null) {
-      Fence.deleteOne({ _id: newfence._id })
-        .then((deleted) => {
-          //console.log("Fence Deleted")
-        })
-        .catch((err) => {
-          errorLogger.error("Error in send Delete fence", err.message);
-        });
-    }
-  });
-}
+// function deletefence(imei) {
+//   Fence.findOne({ imei: imei }).then((newfence) => {
+//     if (newfence != null) {
+//       Fence.deleteOne({ _id: newfence._id })
+//         .then((deleted) => {
+//           //console.log("Fence Deleted")
+//         })
+//         .catch((err) => {
+//           errorLogger.error("Error in send Delete fence", err.message);
+//         });
+//     }
+//   });
+// }
 
 // Save the Fence to Database for Showing Fence Status for App User
-function saveFenceToDatabase(fence) {
-  const alert = new FenceAlert(fence);
-  alert
-    .save()
-    .then((alertfence) => {
-      //console.log("Alert Save")
-    })
-    .catch((err) => {
-      console.log(err);
-      errorLogger.error("Error in Save Fence Alert", err.message);
-    });
-}
+// function saveFenceToDatabase(fence) {
+//   const alert = new FenceAlert(fence);
+//   alert
+//     .save()
+//     .then((alertfence) => {
+//       //console.log("Alert Save")
+//     })
+//     .catch((err) => {
+//       console.log(err);
+//       errorLogger.error("Error in Save Fence Alert", err.message);
+//     });
+// }
