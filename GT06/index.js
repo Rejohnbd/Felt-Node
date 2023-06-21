@@ -84,16 +84,22 @@ var server = gps.server(options, function (device, connection) {
     var lat_raw = str.substr(14, 8);
     var lng_raw = str.substr(22, 8);
     var speed_raw = str.substr(30, 2);
+    var course_raw = str.substr(32, 4);
     var date = str.substr(0, 12);
     var device_time = get_deviceTime(date);
     var date = get_date(device_time);
 
+    console.log(course_raw, "course_raw");
+    console.log(hex2bin(course_raw), "hex2bin");
+
+    console.log(parseInt(hex2bin(course_raw), 2), "rotation");
     // console.log(device_time)
 
     var rawData = {
       status: dev_stat.toString(),
       lat: dex_to_degrees(lat_raw),
       lng: dex_to_degrees(lng_raw),
+      rotation: parseInt(hex2bin(course_raw), 2),
       speed: dex_to_degrees(speed_raw) * 1800000,
     };
 
@@ -102,6 +108,7 @@ var server = gps.server(options, function (device, connection) {
       status: dev_stat,
       lat: dex_to_degrees(lat_raw),
       lng: dex_to_degrees(lng_raw),
+      rotation: parseInt(hex2bin(course_raw), 2),
       speed: dex_to_degrees(speed_raw) * 1800000,
       device_time: device_time,
       devicetime: moment(device_time).add(6, "hours"),
