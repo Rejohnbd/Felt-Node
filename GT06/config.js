@@ -1,8 +1,9 @@
 const config = {
-  URL: "http://vtsapi.greenrevolutionbd.com/api/request-data",
+  URL: "http://vtsapi.greenrevolutionbd.com/api/device-data",
+  // URL_DEVICE_USER: "http://vtsapi.greenrevolutionbd.com/api/device-user",
   FIRE_URL: "https://grvts-d658d-default-rtdb.firebaseio.com", // From Firebase Database
   PORT: 9991,
-  // API_TOKEN: "23jsdgjhsdgjdf8989234jkdfml8838",
+  // API_SECRET_TOKEN: "ce7d6_rejohn_5b9t",
   // MONGO_URL: "mongodb://localhost:27017/mobitrackdb",
 };
 
